@@ -1,77 +1,67 @@
-
-import {useContext, useReducer, createContext} from 'react';
-import { 
-  DISPLAY_ALERT, 
+import { useContext, useReducer, createContext } from "react";
+import {
+  DISPLAY_ALERT,
   CLEAR_ALERT,
-
   SETUP_USER_BEGIN,
   SETUP_USER_SUCCESS,
   SETUP_USER_ERROR,
-
   TOGGLE_SIDEBAR,
   LOGOUT_USER,
-    
   UPDATE_USER_BEGIN,
   UPDATE_USER_SUCCESS,
   UPDATE_USER_ERROR,
-
   HANDLE_CHANGE,
   CLEAR_VALUES,
-
   CREATE_JOB_BEGIN,
   CREATE_JOB_SUCCESS,
   CREATE_JOB_ERROR,
-
   GET_JOBS_BEGIN,
   GET_JOBS_SUCCESS,
-
   SET_EDIT_JOB,
   DELETE_JOB_BEGIN,
-
+  DELETE_JOB_ERROR,
   EDIT_JOB_BEGIN,
   EDIT_JOB_SUCCESS,
   EDIT_JOB_ERROR,
-
   SHOW_STATS_BEGIN,
   SHOW_STATS_SUCCESS,
   CLEAR_FILTERS,
-  CHANGE_PAGE
-} from './actions';
-import reducer from './reducer';
-import axios from 'axios';
+  CHANGE_PAGE,
+} from "./actions";
+import reducer from "./reducer";
+import axios from "axios";
 
-
-const user = localStorage.getItem('user')
-const token = localStorage.getItem('token')
-const userLocation = localStorage.getItem('location')
+const user = localStorage.getItem("user");
+const token = localStorage.getItem("token");
+const userLocation = localStorage.getItem("location");
 
 const initialState = {
   showSidebar: false,
   showAlert: false,
   isLoading: false,
-  alertText: '',
-  alertType: '',
+  alertText: "",
+  alertType: "",
   user: user ? JSON.parse(user) : null,
   token: token,
-  userLocation: userLocation || '',
-  
-  // We use these two lines when we edit job
-  editJobId: '',
-  isEditing: false,
-  
-  company: '',
-  position: '',
-  jobLocation: userLocation || '',
-  jobTypeOptions: ['Full-time', 'Part-time', 'Remote', 'Internship'],
-  jobType: 'Full-time',
-  statusOptions: ['Pending', 'Interview', 'Declined'],
-  status: 'Pending',
+  userLocation: userLocation || "",
 
-  search: '',
-  searchStatus: 'All',
-  searchType: 'All',
-  sort: 'Latest',
-  sortOptions: ['Latest', 'Oldest', 'a-z', 'z-a'],
+  // We use these two lines when we edit job
+  editJobId: "",
+  isEditing: false,
+
+  company: "",
+  position: "",
+  jobLocation: userLocation || "",
+  jobTypeOptions: ["Full-time", "Part-time", "Remote", "Internship"],
+  jobType: "Full-time",
+  statusOptions: ["Pending", "Interview", "Declined"],
+  status: "Pending",
+
+  search: "",
+  searchStatus: "All",
+  searchType: "All",
+  sort: "Latest",
+  sortOptions: ["Latest", "Oldest", "a-z", "z-a"],
 
   jobs: [],
   totalJobs: 0,
@@ -79,297 +69,294 @@ const initialState = {
   page: 1,
 
   stats: {},
-  monthlyApplications: []
-}
+  monthlyApplications: [],
+};
 
-const AppContext = createContext()
+const AppContext = createContext();
 
-
-const AppProvider = ({children}) => {
-  const [state, dispatch] = useReducer(reducer, initialState)
+const AppProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const displayAlert = () => {
-    dispatch({type: DISPLAY_ALERT})
-    clearAlert()
-  }
+    dispatch({ type: DISPLAY_ALERT });
+    clearAlert();
+  };
 
   const clearAlert = () => {
     setTimeout(() => {
       dispatch({ type: CLEAR_ALERT });
-    }, 3000)
-  }
+    }, 3000);
+  };
 
   const toggleSidebar = () => {
-    dispatch({ type: TOGGLE_SIDEBAR })
-  }
+    dispatch({ type: TOGGLE_SIDEBAR });
+  };
 
   const logoutUser = () => {
     setTimeout(() => {
-      dispatch({type: LOGOUT_USER})
-      removeUserFromLocalStorage()
-    }, 1000)
-  }
+      dispatch({ type: LOGOUT_USER });
+      removeUserFromLocalStorage();
+    }, 1000);
+  };
 
-  const addUserToLocalStorage = ({user, token, location}) => {
-    localStorage.setItem('user', JSON.stringify(user))
-    localStorage.setItem('token', token)
-    localStorage.setItem('location', location)
-  }
+  const addUserToLocalStorage = ({ user, token, location }) => {
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", token);
+    localStorage.setItem("location", location);
+  };
   const removeUserFromLocalStorage = () => {
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
-    localStorage.removeItem('location')
-  }
-
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("location");
+  };
 
   // SETUP USER
-  const setupUser = async ({currentUser, endPoint, alertText}) => {
-    dispatch({ type: SETUP_USER_BEGIN})
+  const setupUser = async ({ currentUser, endPoint, alertText }) => {
+    dispatch({ type: SETUP_USER_BEGIN });
 
     try {
-      const {data} = await axios.post(`/api/v1/auth/${endPoint}`, currentUser)
-      const {user, token, location} = data
+      const { data } = await axios.post(
+        `/api/v1/auth/${endPoint}`,
+        currentUser
+      );
+      const { user, token, location } = data;
 
       dispatch({
         type: SETUP_USER_SUCCESS,
-        payload: { user, token, location, alertText }
-      })
+        payload: { user, token, location, alertText },
+      });
 
-      addUserToLocalStorage({user, token, location})
-
+      addUserToLocalStorage({ user, token, location });
     } catch (error) {
-      const message = error.response.data.msg
+      const message = error.response.data.msg;
       dispatch({
         type: SETUP_USER_ERROR,
-        payload: {msg: message}
-      })
+        payload: { msg: message },
+      });
     }
 
-    clearAlert()
-  }
-
+    clearAlert();
+  };
 
   const authFetch = axios.create({
-    baseURL: '/api/v1'
-  })
+    baseURL: "/api/v1",
+  });
 
-  // Axios interceptors are functions that Axios calls for 
-  // every request. You can use interceptors to transform the 
-  // request before Axios sends it, or transform the response before 
-  // Axios returns the response to your code. You can think of interceptors 
+  // Axios interceptors are functions that Axios calls for
+  // every request. You can use interceptors to transform the
+  // request before Axios sends it, or transform the response before
+  // Axios returns the response to your code. You can think of interceptors
   // as Axios' equivalent to middleware in Express or Mongoose.
   // request interceptors
   authFetch.interceptors.request.use(
-    function(config) {
-      config.headers.common['Authorization'] = `Bearer ${state.token}`
-      return config
+    function (config) {
+      config.headers.common["Authorization"] = `Bearer ${state.token}`;
+      return config;
     },
-    function(error) {
-      return Promise.reject(error)
+    function (error) {
+      return Promise.reject(error);
     }
-  )
+  );
 
   // response interceptor
   authFetch.interceptors.response.use(
-    function(response) {
-      return response
+    function (response) {
+      return response;
     },
-    function(error) {
+    function (error) {
       if (error.response.status === 401) {
         // if user is not authorized kick them out
-        logoutUser()
+        logoutUser();
       }
-      return Promise.reject(error)
+      return Promise.reject(error);
     }
-  )
+  );
 
-  
   // UPDATE USER
   // I could mix this function with "SetupUser", but I want to make them different
   const updateUser = async (currentUser) => {
-    dispatch({type: UPDATE_USER_BEGIN})
+    dispatch({ type: UPDATE_USER_BEGIN });
 
     try {
-      const {data} = await authFetch.patch('/auth/updateUser', currentUser)
+      const { data } = await authFetch.patch("/auth/updateUser", currentUser);
 
-      const {user, location} = data
+      const { user, location } = data;
 
       dispatch({
         type: UPDATE_USER_SUCCESS,
-        payload: {user, location, token}
-      })
+        payload: { user, location, token },
+      });
 
       addUserToLocalStorage({
-        user, location, token: initialState.token
-      })
-
+        user,
+        location,
+        token: initialState.token,
+      });
     } catch (error) {
-      const message = error.response.data.msg
-      
+      const message = error.response.data.msg;
+
       if (error.response.status !== 401) {
         dispatch({
           type: UPDATE_USER_ERROR,
-          payload: {msg: message}
-        })
+          payload: { msg: message },
+        });
       }
     }
 
-    clearAlert()
-  }
+    clearAlert();
+  };
 
-
-  const handleChange = ({name, value}) => {
+  const handleChange = ({ name, value }) => {
     dispatch({
       type: HANDLE_CHANGE,
-      payload: {name, value}
-    })
-  }
-
+      payload: { name, value },
+    });
+  };
 
   const clearValues = () => {
-    dispatch({type: CLEAR_VALUES})
-  }
+    dispatch({ type: CLEAR_VALUES });
+  };
 
   // CREATE JOB
   const createJob = async () => {
-    dispatch({type: CREATE_JOB_BEGIN})
+    dispatch({ type: CREATE_JOB_BEGIN });
     try {
-      const {position, company, jobLocation, jobType, status} = state
+      const { position, company, jobLocation, jobType, status } = state;
 
-      await authFetch.post('/jobs', {
-        company, position, jobLocation, jobType, status
-      })
+      await authFetch.post("/jobs", {
+        company,
+        position,
+        jobLocation,
+        jobType,
+        status,
+      });
 
-      dispatch({type: CREATE_JOB_SUCCESS})
-      dispatch({type: CLEAR_VALUES})
-
+      dispatch({ type: CREATE_JOB_SUCCESS });
+      dispatch({ type: CLEAR_VALUES });
     } catch (error) {
-      if (error.response.status === 401) return
-    
-      const message = error.response.data.msg
+      if (error.response.status === 401) return;
+
+      const message = error.response.data.msg;
       dispatch({
         type: CREATE_JOB_ERROR,
-        payload: {msg: message}
-      })
+        payload: { msg: message },
+      });
     }
 
-    clearAlert()
-  }
-
+    clearAlert();
+  };
 
   // GET JOBS
   const getJobs = async () => {
-    const {search, searchStatus, searchType, sort, page} = state
-    let url = `/jobs?page=${page}&status=${searchStatus}&jobType=${searchType}&sort=${sort}`
+    const { search, searchStatus, searchType, sort, page } = state;
+    let url = `/jobs?page=${page}&status=${searchStatus}&jobType=${searchType}&sort=${sort}`;
     if (search) {
-      url = url + `&search=${search}`
+      url = url + `&search=${search}`;
     }
 
-    dispatch({type: GET_JOBS_BEGIN})
+    dispatch({ type: GET_JOBS_BEGIN });
     try {
-      const {data} = await authFetch.get(url)
-      const {jobs, totalJobs, numOfPages} = data
-      
+      const { data } = await authFetch.get(url);
+      const { jobs, totalJobs, numOfPages } = data;
+
       dispatch({
         type: GET_JOBS_SUCCESS,
         payload: {
-          jobs, totalJobs, numOfPages
-        }
-      })
-
+          jobs,
+          totalJobs,
+          numOfPages,
+        },
+      });
     } catch (error) {
-      logoutUser()
+      logoutUser();
     }
 
-    // alert may still display when we quickly switch 
+    // alert may still display when we quickly switch
     // from "Add job" to "All job". in this case clear alert!
-    clearAlert()
-  }
+    clearAlert();
+  };
 
   // SET EDIT JOB
   const setEditJob = (id) => {
-    dispatch({type: SET_EDIT_JOB, payload: {id}})
-  }
+    dispatch({ type: SET_EDIT_JOB, payload: { id } });
+  };
 
   const editJob = async () => {
-    dispatch({type: EDIT_JOB_BEGIN})
+    dispatch({ type: EDIT_JOB_BEGIN });
 
     try {
-      const {
-        position, 
-        company, 
-        jobLocation, 
-        jobType, 
-        status, 
-        editJobId
-      } = state
+      const { position, company, jobLocation, jobType, status, editJobId } =
+        state;
 
       await authFetch.patch(`/jobs/${editJobId}`, {
         position,
         company,
         jobType,
         status,
-        jobLocation
-      })
+        jobLocation,
+      });
 
-      dispatch({type: EDIT_JOB_SUCCESS})
-      dispatch({type: CLEAR_VALUES})
-
+      dispatch({ type: EDIT_JOB_SUCCESS });
+      dispatch({ type: CLEAR_VALUES });
     } catch (error) {
-      if (error.response.status === 401) return
+      if (error.response.status === 401) return;
 
-      const message = error.response.data.msg
+      const message = error.response.data.msg;
       dispatch({
         type: EDIT_JOB_ERROR,
-        payload: {msg: message}
-      })
+        payload: { msg: message },
+      });
     }
 
-    clearAlert()
-  }
-
+    clearAlert();
+  };
 
   // DELETE JOB
   const deleteJob = async (jobId) => {
-    dispatch({type: DELETE_JOB_BEGIN})
+    dispatch({ type: DELETE_JOB_BEGIN });
     try {
-      await authFetch.delete(`/jobs/${jobId}`)
-      getJobs()
+      await authFetch.delete(`/jobs/${jobId}`);
+      getJobs();
     } catch (error) {
-      logoutUser()
-    }
-  }
+      if (error.response.status === 401) return;
 
-  
+      const message = error.response.data.msg;
+      dispatch({
+        type: DELETE_JOB_ERROR,
+        payload: { msg: message },
+      });
+    }
+    clearAlert();
+  };
+
   // SHOW STATS
   const showStats = async () => {
-    dispatch({type: SHOW_STATS_BEGIN})
+    dispatch({ type: SHOW_STATS_BEGIN });
     try {
-      const {data} = await authFetch.get('/jobs/stats')
+      const { data } = await authFetch.get("/jobs/stats");
       dispatch({
         type: SHOW_STATS_SUCCESS,
         payload: {
           stats: data.defaultStats,
-          monthlyApplications: data.monthlyApplications
-        }
-      })
-
+          monthlyApplications: data.monthlyApplications,
+        },
+      });
     } catch (error) {
-      logoutUser()
+      logoutUser();
     }
 
-    clearAlert()
-  }
+    clearAlert();
+  };
 
   // CLEAR FILTERS
   const clearFilters = () => {
-    dispatch({type: CLEAR_FILTERS})
-  }
+    dispatch({ type: CLEAR_FILTERS });
+  };
 
   // PAGINATION
   const changePage = (page) => {
-    dispatch({type: CHANGE_PAGE, payload: {page}})
-  }
+    dispatch({ type: CHANGE_PAGE, payload: { page } });
+  };
 
   return (
     <AppContext.Provider
@@ -389,16 +376,16 @@ const AppProvider = ({children}) => {
         editJob,
         showStats,
         clearFilters,
-        changePage
+        changePage,
       }}
     >
       {children}
     </AppContext.Provider>
-  )
-}
+  );
+};
 
 const useAppContext = () => {
-  return useContext(AppContext)
-}
+  return useContext(AppContext);
+};
 
-export {AppProvider, initialState, useAppContext}
+export { AppProvider, initialState, useAppContext };

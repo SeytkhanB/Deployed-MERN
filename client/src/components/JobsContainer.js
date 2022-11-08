@@ -1,31 +1,32 @@
-
 import { useAppContext } from "../context/appContext";
 import { useEffect } from "react";
-import Loading from './Loading';
+import Loading from "./Loading";
 import Job from "./Job";
 import Wrapper from "../assets/wrappers/JobsContainer";
 import PageBtnContainer from "./PageBtnContainer";
+import Alert from "./Alert";
 
 export default function JobsContainer() {
   const {
-    getJobs, 
-    jobs, 
-    isLoading, 
-    page, 
+    getJobs,
+    jobs,
+    isLoading,
+    page,
     totalJobs,
     search,
     searchStatus,
     searchType,
     sort,
-    numOfPages
-  } = useAppContext()
-  
+    numOfPages,
+    showAlert,
+  } = useAppContext();
+
   useEffect(() => {
-    getJobs()
-  }, [search, searchStatus, searchType, sort, page])
+    getJobs();
+  }, [search, searchStatus, searchType, sort, page]);
 
   if (isLoading) {
-    return <Loading center />
+    return <Loading center />;
   }
 
   if (jobs.length === 0) {
@@ -33,24 +34,28 @@ export default function JobsContainer() {
       <Wrapper>
         <h2>No jobs to display..</h2>
       </Wrapper>
-    )
+    );
   }
 
   return (
     <Wrapper>
+      {showAlert && <Alert />}
       <h5>
-        {totalJobs} job{jobs.length > 1 && 's'} found
+        {totalJobs} job{jobs.length > 1 && "s"} found
       </h5>
 
       <div className="jobs">
         {
           // or just jobs.map() without reverse
-          jobs.slice().reverse().map(job => {
-            return <Job key={job._id} {...job} />
-          })
+          jobs
+            .slice()
+            .reverse()
+            .map((job) => {
+              return <Job key={job._id} {...job} />;
+            })
         }
       </div>
       {numOfPages > 0 && <PageBtnContainer />}
     </Wrapper>
-  )
+  );
 }
